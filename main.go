@@ -49,12 +49,13 @@ func main() {
 	}
 }
 
+// extract returns the integer equivalents of numbers  on each line of the input file...translated into a slice
 func extract(slice []string) *[]int {
 
 	var tmp []int
 	for ix := range slice {
 		ref, err := strconv.Atoi(slice[ix])
-		// Because the error isn't supposed to occur at all i'll handle it here
+		// Because the error isn't supposed to occur at all, i'll handle it here
 		if err != nil {
 			log.Fatal(err)
 			return nil
@@ -64,6 +65,10 @@ func extract(slice []string) *[]int {
 	return &tmp
 }
 
+// simulate does the main calculations of the program...it sorts the number of pizza slices slice from highest to lowest
+// and then adds from the first element whilst checking if the accumulated total isn't
+// More than the given maximum constraint, and then returns the numbers of
+// Different pizzas to order and which types to order.
 func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 
 	maxAndNo := *maxNo
@@ -89,9 +94,13 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 	fmt.Println("The total is ", total)
 	fmt.Println()
 
+	// pizzatype is the map of of the original pizza to their respective number of slices
+	// pizzasAdded is a slice that'll hold the different types of pizzas added
+	// (remember the pizzas are named with number e.g tyep1,type2 etc..)
 	pizzatype := *types
 	var pizzasAdded []int
 
+	// addedSlice holds the current pizza Slice
 	for _, addedSlice := range pizzaSlice {
 	loop:
 		for key, val := range pizzatype {
@@ -102,12 +111,15 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 		}
 	}
 
+	// Now because the output requires that the kinds of pizzas we buy to be listed in ascending order...i sort the pizzasAdded
+	// slice in ascending order
 	sort.Slice(pizzasAdded, func(i, j int) bool {
 		return pizzasAdded[i] < pizzasAdded[j]
 	})
 	return &count, &pizzasAdded
 }
 
+// out will write out output to files, named relative to the input file's name
 func out(count *int, types *[]int, filename string) {
 	filename = strings.TrimPrefix(filename, "inputs/")
 	filename = strings.TrimSuffix(filename, ".in")
