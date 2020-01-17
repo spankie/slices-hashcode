@@ -124,7 +124,6 @@ func out(count *int, types *[]int, filename string) {
 	filename = strings.TrimPrefix(filename, "inputs/")
 	filename = strings.TrimSuffix(filename, ".in")
 	filename = filename + "_output.out"
-	//fmt.Println(newfile)
 	output, err := os.Create("./output/" + filename)
 	checkerr(err)
 
