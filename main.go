@@ -39,6 +39,7 @@ func main() {
 		sliceNos := extract(strings.Split(lines[1], " "))
 
 		// Map to store the pizza types
+		// types maps out each pizza to its number of slices
 		types := make(map[int]int)
 		for ix, val := range *sliceNos {
 			types[ix] = val
@@ -49,7 +50,7 @@ func main() {
 	}
 }
 
-// extract returns the integer equivalents of numbers  on each line of the input file...translated into a slice
+// extract returns the integer equivalents of numbers in the slice parameter...translated into a slice of ints
 func extract(slice []string) *[]int {
 
 	var tmp []int
@@ -58,7 +59,7 @@ func extract(slice []string) *[]int {
 		// Because the error isn't supposed to occur at all, i'll handle it here
 		if err != nil {
 			log.Fatal(err)
-			return nil
+			os.Exit(3)
 		}
 		tmp = append(tmp, ref)
 	}
@@ -69,9 +70,13 @@ func extract(slice []string) *[]int {
 // and then adds from the first element whilst checking if the accumulated total isn't
 // More than the given maximum constraint, and then returns the numbers of
 // Different pizzas to order and which types to order.
+//
+// maxNo holds the integers in the first line of the file, denoting the maximum number of slices allowed and the number of types of pizza
+// slices holds the integer in the second line of the input file, denoting the number of slices for each type of pizza progressively
+// types maps out each pizza to its number of slices
 func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 
-	maxAndNo := *maxNo
+	maxAndNo := *maxNo //TODO revise
 	sliceNos := *slices
 	max := maxAndNo[0]
 
@@ -87,23 +92,24 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 			total += val
 			pizzaSlice = append(pizzaSlice, val)
 			count++
+		} else {
+			break
 		}
 	}
-	fmt.Println("--------------------------------")
-	fmt.Println("--------------------------------")
-	fmt.Println("The total is ", total)
-	fmt.Println()
 
-	// pizzatype is the map of of the original pizza to their respective number of slices
+	// pizzatypes is the map of of the original pizza to their respective number of slices
 	// pizzasAdded is a slice that'll hold the different types of pizzas added
-	// (remember the pizzas are named with number e.g tyep1,type2 etc..)
-	pizzatype := *types
+	// (remember the pizzas are named progressively with numbers e.g type1,type2 etc..)
+	pizzatypes := *types
 	var pizzasAdded []int
 
 	// addedSlice holds the current pizza Slice
 	for _, addedSlice := range pizzaSlice {
+		// Here we range over the pizzatypes map looking for a pizza type,
+		// That has the number of slices that addedSlice is currently holding,
+		// Once found, we add the key, which denotes the pizza type(explained in pizzasAdded declaration above), to the pizzasAdded slice
 	loop:
-		for key, val := range pizzatype {
+		for key, val := range pizzatypes {
 			if addedSlice == val {
 				pizzasAdded = append(pizzasAdded, key)
 				break loop
@@ -111,7 +117,7 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 		}
 	}
 
-	// Now because the output requires that the kinds of pizzas we buy to be listed in ascending order...i sort the pizzasAdded
+	// Now because the output requires that the kinds of pizzas we order to be listed in ascending order...i sort the pizzasAdded
 	// slice in ascending order
 	sort.Slice(pizzasAdded, func(i, j int) bool {
 		return pizzasAdded[i] < pizzasAdded[j]
@@ -121,6 +127,7 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 
 // out will write out output to files, named relative to the input file's name
 func out(count *int, types *[]int, filename string) {
+
 	filename = strings.TrimPrefix(filename, "inputs/")
 	filename = strings.TrimSuffix(filename, ".in")
 	filename = filename + "_output"
