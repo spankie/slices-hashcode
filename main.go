@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -21,10 +20,7 @@ var files = [...]string{
 func main() {
 	for ix := range files {
 		file, err := os.Open(files[ix])
-		if err != nil {
-			log.Fatalf("failed to open file: %s", err)
-			os.Exit(3)
-		}
+		checkerr(err)
 
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanLines)
@@ -33,7 +29,8 @@ func main() {
 		for scanner.Scan() {
 			lines = append(lines, scanner.Text())
 		}
-		file.Close()
+		err = file.Close()
+		checkerr(err)
 
 		maxAndNo := extract(strings.Split(lines[0], " "))
 		sliceNos := extract(strings.Split(lines[1], " "))
@@ -57,10 +54,7 @@ func extract(slice []string) *[]int {
 	for ix := range slice {
 		ref, err := strconv.Atoi(slice[ix])
 		// Because the error isn't supposed to occur at all, i'll handle it here
-		if err != nil {
-			log.Fatal(err)
-			os.Exit(3)
-		}
+		checkerr(err)
 		tmp = append(tmp, ref)
 	}
 	return &tmp
@@ -76,11 +70,11 @@ func extract(slice []string) *[]int {
 // types maps out each pizza to its number of slices
 func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 
-	maxAndNo := *maxNo //TODO revise
+	maxAndNo := *maxNo
 	sliceNos := *slices
 	max := maxAndNo[0]
 
-	sort.Slice(sliceNos, func(i, j int) bool {
+	sort.SliceStable(sliceNos, func(i, j int) bool {
 		return sliceNos[i] > sliceNos[j]
 	})
 
@@ -92,11 +86,10 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 			total += val
 			pizzaSlice = append(pizzaSlice, val)
 			count++
-		} else {
+		} else if total > max {
 			break
 		}
 	}
-
 	// pizzatypes is the map of of the original pizza to their respective number of slices
 	// pizzasAdded is a slice that'll hold the different types of pizzas added
 	// (remember the pizzas are named progressively with numbers e.g type1,type2 etc..)
@@ -107,7 +100,7 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 	for _, addedSlice := range pizzaSlice {
 		// Here we range over the pizzatypes map looking for a pizza type,
 		// That has the number of slices that addedSlice is currently holding,
-		// Once found, we add the key, which denotes the pizza type(explained in pizzasAdded declaration above), to the pizzasAdded slice
+		// Once found, we add the key, which denotes the pizza type(explained in pizzasAdded's declaration above), to the pizzasAdded slice
 	loop:
 		for key, val := range pizzatypes {
 			if addedSlice == val {
@@ -119,7 +112,7 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 
 	// Now because the output requires that the kinds of pizzas we order to be listed in ascending order...i sort the pizzasAdded
 	// slice in ascending order
-	sort.Slice(pizzasAdded, func(i, j int) bool {
+	sort.SliceStable(pizzasAdded, func(i, j int) bool {
 		return pizzasAdded[i] < pizzasAdded[j]
 	})
 	return &count, &pizzasAdded
@@ -130,14 +123,32 @@ func out(count *int, types *[]int, filename string) {
 
 	filename = strings.TrimPrefix(filename, "inputs/")
 	filename = strings.TrimSuffix(filename, ".in")
-	filename = filename + "_output"
+	filename = filename + "_output.out"
+	//fmt.Println(newfile)
+	output, err := os.Create("./output/" + filename)
+	checkerr(err)
 
-	fmt.Println(filename)
-	fmt.Println(*count)
-	fmt.Println(*types)
-	fmt.Println("--------------------------------")
-	fmt.Println("--------------------------------")
-	fmt.Print("test")
-	fmt.Print("test1")
+	line1 := strconv.Itoa(*count) + "\n"
+	line2 := ""
+	for ix, val := range *types {
+		if ix != (len(*types) - 1) {
+			line2 += strconv.Itoa(val) + " "
+		} else {
+			line2 += strconv.Itoa(val)
+			break
+		}
+	}
 
+	w := bufio.NewWriter(output)
+	w.Write([]byte(line1))
+	w.Write([]byte(line2))
+	err = w.Flush()
+	checkerr(err)
+}
+
+func checkerr(e error) {
+	if e != nil {
+		log.Fatal(e)
+		os.Exit(3)
+	}
 }
