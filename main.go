@@ -1,3 +1,8 @@
+// All Inputs are kept in the inputs folder.
+// All outputs are written to the outputs folder..which will be created by the program.
+// The program walks through the inputs folder and and selects each file for processing
+// After processing the outputs of each file are written to the outputs folder.
+
 package main
 
 import (
@@ -38,8 +43,8 @@ func main() {
 			maxAndNo := extract(strings.Split(lines[0], " "))
 			sliceNos := extract(strings.Split(lines[1], " "))
 
-			pizzasAdded := simulate(maxAndNo, sliceNos)
-			out(pizzasAdded, path)
+			pizzasAdded := calculateNoOfPizzasAndSlices(maxAndNo, sliceNos)
+			printToFile(pizzasAdded, path)
 		}
 		return nil
 	})
@@ -61,10 +66,10 @@ func extract(slice []string) *[]int {
 	return &tmp
 }
 
-// simulate does the main calculations of the program...it iterate the sliceNos slice from the end
+// calculateNoOfPizzasAndSlices does the main calculations of the program...it iterate the sliceNos slice from the end
 // and then adds elements whilst checking if the accumulated total isn't
 // More than the given maximum constraint, and then returns the a slice containing the pizza types ordered
-func simulate(maxNo *[]int, slices *[]int) *[]int {
+func calculateNoOfPizzasAndSlices(maxNo *[]int, slices *[]int) *[]int {
 
 	maxAndNo := *maxNo
 	sliceNos := *slices
@@ -93,7 +98,7 @@ func simulate(maxNo *[]int, slices *[]int) *[]int {
 }
 
 // out will write out output to files, named relative to the input file's name
-func out(types *[]int, filename string) {
+func printToFile(types *[]int, filename string) {
 	// replace all occurence of "in" with "out"
 	filename = strings.Replace(filename, "in", "out", -1)
 
