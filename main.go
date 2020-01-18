@@ -38,19 +38,11 @@ func main() {
 			maxAndNo := extract(strings.Split(lines[0], " "))
 			sliceNos := extract(strings.Split(lines[1], " "))
 
-			// Map to store the pizza types
-			types := make(map[int]int)
-			for ix, val := range *sliceNos {
-				types[ix] = val
-			}
-
-			pizzasAdded := simulate(maxAndNo, sliceNos, &types)
+			pizzasAdded := simulate(maxAndNo, sliceNos)
 			out(pizzasAdded, path)
-			// }
 		}
 		return nil
 	})
-	// fmt.Printf("Error reading the input directory: %v", err)
 }
 
 // extract returns the integer equivalents of numbers in the slice parameter...translated into a slice of ints
@@ -62,24 +54,23 @@ func extract(slice []string) *[]int {
 		// Because the error isn't supposed to occur at all, i'll handle it here
 		if err != nil {
 			fmt.Println("Conversion failed")
+			os.Exit(3) // we make this stringent because this error should never occur
 		}
 		tmp = append(tmp, ref)
 	}
 	return &tmp
 }
 
-// simulate does the main calculations of the program...it sorts the number of pizza slices slice from highest to lowest
-// and then adds from the first element whilst checking if the accumulated total isn't
-// More than the given maximum constraint, and then returns the numbers of
-// Different pizzas to order and which types to order.
-func simulate(maxNo *[]int, slices *[]int, types *map[int]int) *[]int {
+// simulate does the main calculations of the program...it iterate the sliceNos slice from the end
+// and then adds elements whilst checking if the accumulated total isn't
+// More than the given maximum constraint, and then returns the a slice containing the pizza types ordered
+func simulate(maxNo *[]int, slices *[]int) *[]int {
 
 	maxAndNo := *maxNo
 	sliceNos := *slices
 	max := maxAndNo[0]
 
 	total := 0
-	// var pizzaSlice []int
 	var pizzasAdded []int
 
 	// using this to loop through the slice from the back
@@ -89,7 +80,6 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) *[]int {
 		val := sliceNos[key]
 		if (total + val) <= max {
 			total += val
-			// pizzaSlice = append(pizzaSlice, val)
 			pizzasAdded = append(pizzasAdded, key)
 		}
 	}
@@ -113,7 +103,7 @@ func out(types *[]int, filename string) {
 		fmt.Println("Cannot create file for saving result: ", err)
 		return // return since there is no file to write to
 	}
-	_, err = f.Write([]byte(strconv.Itoa(len(*types)) + "\n" + strings.Trim(fmt.Sprint(types), "&[]")))
+	_, err = f.Write([]byte(strconv.Itoa(len(*types)) + "\n" + strings.Trim(fmt.Sprint(*types), "&[]")))
 	if err != nil {
 		fmt.Println("Cannot write result to file: ", err)
 	}
