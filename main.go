@@ -2,49 +2,55 @@ package main
 
 import (
 	"bufio"
-	"log"
+	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 )
 
-var files = [...]string{
-	"inputs/a_example.in",
-	"inputs/b_small.in",
-	"inputs/c_medium.in",
-	"inputs/d_quite_big.in",
-	"inputs/e_also_big.in",
-}
-
 func main() {
-	for ix := range files {
-		file, err := os.Open(files[ix])
-		checkerr(err)
-
-		scanner := bufio.NewScanner(file)
-		scanner.Split(bufio.ScanLines)
-
-		var lines []string
-		for scanner.Scan() {
-			lines = append(lines, scanner.Text())
-		}
-		err = file.Close()
-		checkerr(err)
-
-		maxAndNo := extract(strings.Split(lines[0], " "))
-		sliceNos := extract(strings.Split(lines[1], " "))
-
-		// Map to store the pizza types
-		// types maps out each pizza to its number of slices
-		types := make(map[int]int)
-		for ix, val := range *sliceNos {
-			types[ix] = val
-		}
-
-		count, pizzasAdded := simulate(maxAndNo, sliceNos, &types)
-		out(count, pizzasAdded, files[ix])
+	// create output directory
+	err := os.Mkdir("outputs", os.ModePerm)
+	if err != nil {
+		fmt.Printf("Could not create outputs directory: %v\n", err)
 	}
+	// Read the `input` directory so that we don't have to
+	// modify the code whenever we want to test other inputs
+	_ = filepath.Walk("inputs", func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			file, err := os.Open(path)
+			if err != nil {
+				// we dont want to stop the whole app if just one file does not open
+				return err
+			}
+
+			scanner := bufio.NewScanner(file)
+			scanner.Split(bufio.ScanLines)
+
+			var lines []string
+			for scanner.Scan() {
+				lines = append(lines, scanner.Text())
+			}
+			file.Close()
+
+			maxAndNo := extract(strings.Split(lines[0], " "))
+			sliceNos := extract(strings.Split(lines[1], " "))
+
+			// Map to store the pizza types
+			types := make(map[int]int)
+			for ix, val := range *sliceNos {
+				types[ix] = val
+			}
+
+			pizzasAdded := simulate(maxAndNo, sliceNos, &types)
+			out(pizzasAdded, path)
+			// }
+		}
+		return nil
+	})
+	// fmt.Printf("Error reading the input directory: %v", err)
 }
 
 // extract returns the integer equivalents of numbers in the slice parameter...translated into a slice of ints
@@ -54,7 +60,9 @@ func extract(slice []string) *[]int {
 	for ix := range slice {
 		ref, err := strconv.Atoi(slice[ix])
 		// Because the error isn't supposed to occur at all, i'll handle it here
-		checkerr(err)
+		if err != nil {
+			fmt.Println("Conversion failed")
+		}
 		tmp = append(tmp, ref)
 	}
 	return &tmp
@@ -64,49 +72,25 @@ func extract(slice []string) *[]int {
 // and then adds from the first element whilst checking if the accumulated total isn't
 // More than the given maximum constraint, and then returns the numbers of
 // Different pizzas to order and which types to order.
-//
-// maxNo holds the integers in the first line of the file, denoting the maximum number of slices allowed and the number of types of pizza
-// slices holds the integer in the second line of the input file, denoting the number of slices for each type of pizza progressively
-// types maps out each pizza to its number of slices
-func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
+func simulate(maxNo *[]int, slices *[]int, types *map[int]int) *[]int {
 
 	maxAndNo := *maxNo
 	sliceNos := *slices
 	max := maxAndNo[0]
 
-	sort.SliceStable(sliceNos, func(i, j int) bool {
-		return sliceNos[i] > sliceNos[j]
-	})
-
 	total := 0
-	count := 0
-	var pizzaSlice []int
-	for _, val := range sliceNos {
-		if (total + val) <= max {
-			total += val
-			pizzaSlice = append(pizzaSlice, val)
-			count++
-		} else if total > max {
-			break
-		}
-	}
-	// pizzatypes is the map of of the original pizza to their respective number of slices
-	// pizzasAdded is a slice that'll hold the different types of pizzas added
-	// (remember the pizzas are named progressively with numbers e.g type1,type2 etc..)
-	pizzatypes := *types
+	// var pizzaSlice []int
 	var pizzasAdded []int
 
-	// addedSlice holds the current pizza Slice
-	for _, addedSlice := range pizzaSlice {
-		// Here we range over the pizzatypes map looking for a pizza type,
-		// That has the number of slices that addedSlice is currently holding,
-		// Once found, we add the key, which denotes the pizza type(explained in pizzasAdded's declaration above), to the pizzasAdded slice
-	loop:
-		for key, val := range pizzatypes {
-			if addedSlice == val {
-				pizzasAdded = append(pizzasAdded, key)
-				break loop
-			}
+	// using this to loop through the slice from the back
+	// this is because the larger values are at the end of the slice...
+	// from the example file we have [2 5 6 8] right, the larger numbers are at the end of the slice
+	for key := len(sliceNos) - 1; key >= 0; key-- {
+		val := sliceNos[key]
+		if (total + val) <= max {
+			total += val
+			// pizzaSlice = append(pizzaSlice, val)
+			pizzasAdded = append(pizzasAdded, key)
 		}
 	}
 
@@ -115,39 +99,23 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) (*int, *[]int) {
 	sort.SliceStable(pizzasAdded, func(i, j int) bool {
 		return pizzasAdded[i] < pizzasAdded[j]
 	})
-	return &count, &pizzasAdded
+	return &pizzasAdded
 }
 
 // out will write out output to files, named relative to the input file's name
-func out(count *int, types *[]int, filename string) {
+func out(types *[]int, filename string) {
+	// replace all occurence of "in" with "out"
+	filename = strings.Replace(filename, "in", "out", -1)
 
-	filename = strings.TrimPrefix(filename, "inputs/")
-	filename = strings.TrimSuffix(filename, ".in")
-	filename = filename + "_output.out"
-	output, err := os.Create("./output/" + filename)
-	checkerr(err)
-
-	line1 := strconv.Itoa(*count) + "\n"
-	line2 := ""
-	for ix, val := range *types {
-		if ix != (len(*types) - 1) {
-			line2 += strconv.Itoa(val) + " "
-		} else {
-			line2 += strconv.Itoa(val)
-			break
-		}
+	f, err := os.Create(filename)
+	defer f.Close()
+	if err != nil {
+		fmt.Println("Cannot create file for saving result: ", err)
+		return // return since there is no file to write to
 	}
-
-	w := bufio.NewWriter(output)
-	w.Write([]byte(line1))
-	w.Write([]byte(line2))
-	err = w.Flush()
-	checkerr(err)
-}
-
-func checkerr(e error) {
-	if e != nil {
-		log.Fatal(e)
-		os.Exit(3)
+	_, err = f.Write([]byte(strconv.Itoa(len(*types)) + "\n" + strings.Trim(fmt.Sprint(types), "&[]")))
+	if err != nil {
+		fmt.Println("Cannot write result to file: ", err)
 	}
+	f.Sync()
 }
