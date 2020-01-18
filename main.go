@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -57,7 +56,7 @@ func main() {
 	// fmt.Printf("Error reading the input directory: %v", err)
 }
 
-// extract returns the integer equivalents of numbers  on each line of the input file...translated into a slice
+// extract returns the integer equivalents of numbers in the slice parameter...translated into a slice of ints
 func extract(slice []string) *[]int {
 
 	var tmp []int
@@ -65,8 +64,7 @@ func extract(slice []string) *[]int {
 		ref, err := strconv.Atoi(slice[ix])
 		// Because the error isn't supposed to occur at all, i'll handle it here
 		if err != nil {
-			log.Fatal(err)
-			return nil
+			fmt.Println("Conversion failed")
 		}
 		tmp = append(tmp, ref)
 	}
@@ -100,9 +98,9 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) *[]int {
 	}
 	fmt.Println("The total is ", total)
 
-	// Now because the output requires that the kinds of pizzas we buy to be listed in ascending order...i sort the pizzasAdded
+	// Now because the output requires that the kinds of pizzas we order to be listed in ascending order...i sort the pizzasAdded
 	// slice in ascending order
-	sort.Slice(pizzasAdded, func(i, j int) bool {
+	sort.SliceStable(pizzasAdded, func(i, j int) bool {
 		return pizzasAdded[i] < pizzasAdded[j]
 	})
 	return &pizzasAdded
