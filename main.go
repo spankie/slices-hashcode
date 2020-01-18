@@ -20,13 +20,10 @@ func main() {
 	// modify the code whenever we want to test other inputs
 	_ = filepath.Walk("inputs", func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
-			// for ix := range files {
 			file, err := os.Open(path)
 			if err != nil {
-				// we dont want to alter the whole code if just one file does not open
+				// we dont want to stop the whole app if just one file does not open
 				return err
-				// log.Fatalf("failed to open file: %s", err)
-				// os.Exit(3)
 			}
 
 			scanner := bufio.NewScanner(file)
@@ -96,7 +93,6 @@ func simulate(maxNo *[]int, slices *[]int, types *map[int]int) *[]int {
 			pizzasAdded = append(pizzasAdded, key)
 		}
 	}
-	fmt.Println("The total is ", total)
 
 	// Now because the output requires that the kinds of pizzas we order to be listed in ascending order...i sort the pizzasAdded
 	// slice in ascending order
@@ -111,17 +107,15 @@ func out(types *[]int, filename string) {
 	// replace all occurence of "in" with "out"
 	filename = strings.Replace(filename, "in", "out", -1)
 
-	fmt.Println("Writing answer to file: ", filename)
-	fmt.Println(len(*types), " types of pizza")
 	f, err := os.Create(filename)
+	defer f.Close()
 	if err != nil {
 		fmt.Println("Cannot create file for saving result: ", err)
+		return // return since there is no file to write to
 	}
 	_, err = f.Write([]byte(strconv.Itoa(len(*types)) + "\n" + strings.Trim(fmt.Sprint(types), "&[]")))
 	if err != nil {
 		fmt.Println("Cannot write result to file: ", err)
 	}
 	f.Sync()
-	f.Close()
-	fmt.Println()
 }
