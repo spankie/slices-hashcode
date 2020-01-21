@@ -23,7 +23,7 @@ func main() {
 	}
 	// Read the `input` directory so that we don't have to
 	// modify the code whenever we want to test other inputs
-	_ = filepath.Walk("inputs", func(path string, info os.FileInfo, err error) error {
+	filepath.Walk("inputs", func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			file, err := os.Open(path)
 			if err != nil {
