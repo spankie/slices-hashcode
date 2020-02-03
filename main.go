@@ -81,13 +81,37 @@ func calculateNoOfPizzasAndSlices(maxNo *[]int, slices *[]int) *[]int {
 	// using this to loop through the slice from the back
 	// this is because the larger values are at the end of the slice...
 	// from the example file we have [2 5 6 8] right, the larger numbers are at the end of the slice
-	for key := len(sliceNos) - 1; key >= 0; key-- {
-		val := sliceNos[key]
-		if (total + val) <= max {
-			total += val
-			pizzasAdded = append(pizzasAdded, key)
+	// for key := len(sliceNos) - 1; key >= 0; key-- {
+	// 	val := sliceNos[key]
+	// 	if (total + val) <= max {
+	// 		total += val
+	// 		pizzasAdded = append(pizzasAdded, key)
+	// 	}
+	// }
+
+	hasBit := func(n int, pos uint) bool {
+		val := n & (1 << pos)
+		return (val > 0)
+	}
+
+	// new implementation
+	types := maxAndNo[1]
+	opsize := types * types
+	for key := 1; key < opsize; key++ {
+		tempsum := 0
+		var temppizzasAdded []int
+		for j := 0; j < types; j++ {
+			if hasBit(key, uint(j)) {
+				tempsum += sliceNos[j]
+				temppizzasAdded = append(temppizzasAdded, j)
+			}
+		}
+		if tempsum <= max && tempsum >= total {
+			total = tempsum
+			pizzasAdded = temppizzasAdded
 		}
 	}
+	// end of new implementation
 
 	// Now because the output requires that the kinds of pizzas we order to be listed in ascending order...i sort the pizzasAdded
 	// slice in ascending order
